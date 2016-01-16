@@ -3,6 +3,7 @@
 
 #include <round.h>
 #include <stdint.h>
+#include "src/lib/kernel/list.c"
 
 /* Number of timer interrupts per second. */
 #define TIMER_FREQ 100

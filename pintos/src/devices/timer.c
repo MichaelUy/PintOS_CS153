@@ -7,7 +7,8 @@
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
-  
+#include "src/lib/kernel/list.c" 
+
 /* See [8254] for hardware details of the 8254 timer chip. */
 
 #if TIMER_FREQ < 19
@@ -16,6 +17,57 @@
 #if TIMER_FREQ > 1000
 #error TIMER_FREQ <= 1000 recommended
 #endif
+
+//for reference of whether these are pointers in code below
+struct thread * t = current_thread();
+struct list_elem listEleml;
+
+//Initialize a list
+//Put it in thread_inti() if all threads use this same instance of a list (eg static)
+//Put it in init_thread() if each thread will have its own instance
+//If its not thread related, make sure is it initialized at initialization of the object that uses it. 
+//Runtime errors will happen if you don't init your lists.
+
+list_init (&myList1);
+
+//Common functions
+list_push_back (&myList1, &t->listElem1);
+list_remove(&t->listElem1);				   
+list_pop_front (&myList1);
+
+
+//Iterate through a list and get a list entry
+struct list_elem * e;
+for (e = list_begin(&myList1); e != list_end(&myList1); e = list_next(e))
+{
+	//Notice one parameter is the struct thread (or whatever you're using)
+	struct thread *t = list_entry (e, struct thread, listElem1);
+	//(can use other lists by switching which elem is used); 
+}
+	
+//Get fancy using list_min combined with list_entry
+val = list_entry (	list_min (&t->myList1, MY_COMPARATOR_FUNCTION, NULL), 
+					struct thread, 
+					listElem1)->threadMemberValue;
+
+
+//Insert into a list and have it be ordered. Needs a comparator function
+list_insert_ordered (&myList1, &t->listElem1, MY_COMPARATOR_FUNCTION, NULL);
+					
+//Comparator function template
+//Used to explain to the code how one element in the list is greater than the other
+//MUST FOLLOW THIS PARAMETER AND RETURN VALUE LAYOUT!!!
+static bool
+MY_COMPARATOR_FUNCTION (const struct list_elem *a,
+                        const struct list_elem *b,
+                        void *aux UNUSED) 
+{
+	//----------------FIX ME-------------------
+	//ADD ON THE THE COMPARATOR
+	return true if list_entry from a is < list_entry from b, else false;
+}
+
+  						    																                                                	}
 
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
@@ -92,8 +144,12 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
+  //----------------FIX ME------------------
+  //need to disable interrupt here*	
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
+  //need to enable interrupt again here*
+  //----------------------------------------
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
