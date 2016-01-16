@@ -90,18 +90,16 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
+  int64_t start = timer_ticks (); 
 
-  ASSERT (intr_get_level () == INTR_ON);
-  //----------------FIX ME------------------
-  //*need to disable interrupt here*	
-  //thread_curret()-> wake_time  = start+ticks;
+  ASSERT (intr_get_level () == INTR_ON); //check if interrupt is on
+  enum intr_level old_level = intr_disable (); //disable interrupt	
+  thread_curret()-> wake_time  = start+ticks;
   //*add thread_current() into the sleep_list() with wake-time
   //*Insert into a list and have it be ordered. Needs a comparator function
-  //list_insert_ordered (&myList1, &t->listElem1, MY_COMPARATOR_FUNCTION, NULL);
-  //thread_block() (puts the thread to sleep)
-  //*need to enable interrupt again here*
-  //----------------------------------------
+  list_insert_ordered (&sleep_list, thread_current()->sleep_elem, MY_COMPARATOR_FUNCTION, NULL);
+  thread_block(); //put thread to sleep  
+  intr_set_level = old_level; //enable the interrupt
 }
 
 MY_COMPARATOR_FUNCTION (const struct list_elem *a,
