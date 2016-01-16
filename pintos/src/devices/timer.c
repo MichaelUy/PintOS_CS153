@@ -111,6 +111,29 @@ MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 	return false;
 }
 
+void wake_up_threads(void)
+{
+	//check current time
+	int64_t curr_time = timer_ticks (); 
+	
+	struct list_elem * e;
+	struct thread * t;
+	//while loop
+	while(1)
+	{
+		e = list_begin(&sleep_list); //beginning of list elem
+		t = list_entry(e, struct thread, sleep_elem); //thread of e
+		
+		if (&t->wake_time < curr_time)
+		{
+				thread_unblock(t); //wake up the thread
+				list_pop_front(&sleep_list); //pop the threads from the sleep list
+		}
+		else 
+			break;
+	}
+}
+
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
    turned on. */
 void
