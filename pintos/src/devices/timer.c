@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "devices/timer.h"
 #include <debug.h>
 #include <inttypes.h>
@@ -7,7 +8,7 @@
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
-#include "src/lib/kernel/list.c" 
+
 
 /* See [8254] for hardware details of the 8254 timer chip. */
 
@@ -16,7 +17,7 @@
 #endif
 #if TIMER_FREQ > 1000
 #error TIMER_FREQ <= 1000 recommended
-#endif		    																                                                	}
+#endif	    																                                                	}
 
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
@@ -104,11 +105,13 @@ timer_sleep (int64_t ticks)
   //----------------------------------------
 }
 
-MY_COMPARATOR_FUNCTION (const struct list_elem *a,
-                        const struct list_elem *b,
-                        void *aux UNUSED) 
+static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
+									const struct list_elem *b,
+									void *aux UNUSED) 
 {
-	if (a < b)
+	struct thread *threadA = list_entry (a,struct thread,sleep_elem); 
+	struct thread *threadB = list_entry (b,struct thread,sleep_elem); 
+	if (threadA->wake_time < threadB->wake_time)
 		return true;
 	return false;
 }
