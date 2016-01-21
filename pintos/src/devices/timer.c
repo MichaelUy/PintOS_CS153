@@ -91,18 +91,16 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
+  int64_t start = timer_ticks (); 
 
-  ASSERT (intr_get_level () == INTR_ON);
-  //----------------FIX ME------------------
-  //*need to disable interrupt here*	
-  //thread_curret()-> wake_time  = start+ticks;
+  ASSERT (intr_get_level () == INTR_ON); //check if interrupt is on
+  enum intr_level old_level = intr_disable (); //disable interrupt	
+  thread_curret()-> wake_time  = start+ticks;
   //*add thread_current() into the sleep_list() with wake-time
   //*Insert into a list and have it be ordered. Needs a comparator function
-  //list_insert_ordered (&myList1, &t->listElem1, MY_COMPARATOR_FUNCTION, NULL);
-  //thread_block() (puts the thread to sleep)
-  //*need to enable interrupt again here*
-  //----------------------------------------
+  list_insert_ordered (&sleep_list, thread_current()->sleep_elem, MY_COMPARATOR_FUNCTION, NULL);
+  thread_block(); //put thread to sleep  
+  intr_set_level = old_level; //enable the interrupt
 }
 
 static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
@@ -114,6 +112,29 @@ static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 	if (threadA->wake_time < threadB->wake_time)
 		return true;
 	return false;
+}
+
+void wake_up_threads(void)
+{
+	//check current time
+	int64_t curr_time = timer_ticks (); 
+	
+	struct list_elem * e;
+	struct thread * t;
+	//while loop
+	while(1)
+	{
+		e = list_begin(&sleep_list); //beginning of list elem
+		t = list_entry(e, struct thread, sleep_elem); //thread of e
+		
+		if (&t->wake_time < curr_time)
+		{
+				thread_unblock(t); //wake up the thread
+				list_pop_front(&sleep_list); //pop the threads from the sleep list
+		}
+		else 
+			break;
+	}
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -192,6 +213,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+  wake_up_threads();
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
