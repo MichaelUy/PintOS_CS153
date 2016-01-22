@@ -24,10 +24,6 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
-/* List of processes in THREAD_WAIT state that are SLEEPING, that is, 
-   processes that are waiting to be woken up. */
-static struct list sleep_list;
-
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -95,7 +91,6 @@ thread_init (void)
 
   lock_init (&tid_lock);
   list_init (&ready_list);
-  list_init (&sleep_list);
   list_init (&all_list);
 
   /* Set up a thread structure for the running thread. */

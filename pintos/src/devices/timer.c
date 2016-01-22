@@ -8,7 +8,7 @@
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
-#include "threads/thread.c"
+//#include "threads/thread.c"
 
 /* See [8254] for hardware details of the 8254 timer chip. */
 
@@ -18,6 +18,7 @@
 #if TIMER_FREQ > 1000
 #error TIMER_FREQ <= 1000 recommended
 #endif	    																                                                	}
+
 
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
@@ -34,11 +35,17 @@ static void real_time_delay (int64_t num, int32_t denom);
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
+   
+
+static struct list sleep_list;
+
 void
 timer_init (void) 
 {
+  list_init (&sleep_list);
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+  
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
