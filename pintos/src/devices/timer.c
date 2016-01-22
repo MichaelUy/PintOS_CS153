@@ -8,6 +8,7 @@
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
+#include "threads/thread.c"
 
 /* See [8254] for hardware details of the 8254 timer chip. */
 
@@ -98,9 +99,9 @@ timer_sleep (int64_t ticks)
   thread_current() -> wake_time  = start+ticks;
   //*add thread_current() into the sleep_list() with wake-time
   //*Insert into a list and have it be ordered. Needs a comparator function
-  list_insert_ordered (&sleep_list, thread_current()->sleep_elem, MY_COMPARATOR_FUNCTION, NULL);
+  list_insert_ordered (&sleep_list, &thread_current() -> sleep_elem, MY_COMPARATOR_FUNCTION, NULL);
   thread_block(); //put thread to sleep  
-  intr_set_level = old_level; //enable the interrupt
+  intr_set_level(old_level); //enable the interrupt
 }
 
 static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
@@ -127,7 +128,10 @@ void wake_up_threads(void)
 		e = list_begin(&sleep_list); //beginning of list elem
 		t = list_entry(e, struct thread, sleep_elem); //thread of e
 		
-		if (&t->wake_time < curr_time)
+		int64_t * thread_wake_time = &t -> wake_time; //the pointer that points to the thread's wake time
+		int64_t tmp = *thread_wake_time;
+		
+		if (tmp < curr_time)
 		{
 				thread_unblock(t); //wake up the thread
 				list_pop_front(&sleep_list); //pop the threads from the sleep list
