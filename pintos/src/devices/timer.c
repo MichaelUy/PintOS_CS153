@@ -9,7 +9,6 @@
 #include "threads/synch.h"
 #include "threads/thread.h"
 
-
 /* See [8254] for hardware details of the 8254 timer chip. */
 
 #if TIMER_FREQ < 19
@@ -94,8 +93,9 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks (); 
 
   ASSERT (intr_get_level () == INTR_ON); //check if interrupt is on
-  enum intr_level old_level = intr_disable (); //disable interrupt	
-  thread_curret()-> wake_time  = start+ticks;
+  enum intr_level old_level = intr_disable (); //disable interrupt
+  //int64_t wake_time_tmp = start + ticks;	
+  thread_current() -> wake_time  = start+ticks;
   //*add thread_current() into the sleep_list() with wake-time
   //*Insert into a list and have it be ordered. Needs a comparator function
   list_insert_ordered (&sleep_list, thread_current()->sleep_elem, MY_COMPARATOR_FUNCTION, NULL);
@@ -105,7 +105,7 @@ timer_sleep (int64_t ticks)
 
 static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 									const struct list_elem *b,
-									void *aux UNUSED) 
+									void *aux) 
 {
 	struct thread *threadA = list_entry (a,struct thread,sleep_elem); 
 	struct thread *threadB = list_entry (b,struct thread,sleep_elem); 
