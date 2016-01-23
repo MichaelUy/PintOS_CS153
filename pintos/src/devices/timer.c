@@ -126,19 +126,18 @@ void wake_up_threads(void)
 	//check current time
 	int64_t curr_time = timer_ticks (); 
 	
-	struct list_elem * e;
-	struct thread * t;
+	
+	
 	//while loop
-	while(1)
+	while(!list_empty(&sleep_list) )
 	{
-		e = list_begin(&sleep_list); //beginning of list elem
-		ASSERT (e != NULL);
-		t = list_entry(e, struct thread, sleep_elem); //thread of e
-		ASSERT (t != NULL);
-		int64_t * thread_wake_time = &t -> wake_time; //the pointer that points to the thread's wake time
-		int64_t tmp = *thread_wake_time;
+		struct list_elem * e = list_begin(&sleep_list); //beginning of list elem
 		
-		if (tmp < curr_time)
+		struct thread * t = list_entry(e, struct thread, sleep_elem); //thread of e
+		//ASSERT (is_thread (t));
+		int64_t thread_wake_time = t -> wake_time; //the pointer that points to the thread's wake time
+	
+		if (thread_wake_time <= curr_time)
 		{
 				thread_unblock(t); //wake up the thread
 				list_pop_front(&sleep_list); //pop the threads from the sleep list
