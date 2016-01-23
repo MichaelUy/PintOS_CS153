@@ -1,9 +1,0 @@
-Make a list of task we need to do 
-Finish Design Doc
-	Add what we did in lab into the design doc
-	1. Create sleep list
-	2. Tell threads to go to sleep
-	3. Insert threads into the sleep list ordering by their waken time
-	4. Call wake-up-threads() in interrupt to check what threads to wake up
-	5. Implement wake-up-threads() 
-Schedule time to finish the task
