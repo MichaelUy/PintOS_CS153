@@ -105,7 +105,7 @@ timer_sleep (int64_t ticks)
   thread_current() -> wake_time  = start+ticks;
   //*add thread_current() into the sleep_list() with wake-time
   //*Insert into a list and have it be ordered. Needs a comparator function
-  list_insert_ordered (&sleep_list, &thread_current() -> elem, MY_COMPARATOR_FUNCTION, NULL);
+  list_insert_ordered (&sleep_list, &thread_current() -> sleep_elem, MY_COMPARATOR_FUNCTION, NULL);
   thread_block(); //put thread to sleep  
   intr_set_level(old_level); //enable the interrupt
 }
@@ -114,8 +114,8 @@ bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 									const struct list_elem *b,
 									void *aux) 
 {
-	struct thread *threadA = list_entry (a,struct thread,elem); 
-	struct thread *threadB = list_entry (b,struct thread,elem);
+	struct thread *threadA = list_entry (a,struct thread,sleep_elem); 
+	struct thread *threadB = list_entry (b,struct thread,sleep_elem);
 	if (threadA->wake_time < threadB->wake_time)
 		return true;
 	return false;
@@ -132,7 +132,9 @@ void wake_up_threads(void)
 	while(1)
 	{
 		e = list_begin(&sleep_list); //beginning of list elem
-		t = list_entry(e, struct thread, elem); //thread of e
+		ASSERT (e != NULL);
+		t = list_entry(e, struct thread, sleep_elem); //thread of e
+		ASSERT (t != NULL);
 		int64_t * thread_wake_time = &t -> wake_time; //the pointer that points to the thread's wake time
 		int64_t tmp = *thread_wake_time;
 		
