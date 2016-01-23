@@ -17,7 +17,7 @@
 #endif
 #if TIMER_FREQ > 1000
 #error TIMER_FREQ <= 1000 recommended
-#endif	    																                                                	}
+#endif 																                                                	
 
 
 /* Number of timer ticks since OS booted. */
@@ -102,7 +102,6 @@ timer_sleep (int64_t ticks)
 
   ASSERT (intr_get_level () == INTR_ON); //check if interrupt is on
   enum intr_level old_level = intr_disable (); //disable interrupt
-  //int64_t wake_time_tmp = start + ticks;	
   thread_current() -> wake_time  = start+ticks;
   //*add thread_current() into the sleep_list() with wake-time
   //*Insert into a list and have it be ordered. Needs a comparator function
@@ -111,7 +110,7 @@ timer_sleep (int64_t ticks)
   intr_set_level(old_level); //enable the interrupt
 }
 
-static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
+bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 									const struct list_elem *b,
 									void *aux) 
 {
@@ -134,7 +133,6 @@ void wake_up_threads(void)
 	{
 		e = list_begin(&sleep_list); //beginning of list elem
 		t = list_entry(e, struct thread, elem); //thread of e
-		
 		int64_t * thread_wake_time = &t -> wake_time; //the pointer that points to the thread's wake time
 		int64_t tmp = *thread_wake_time;
 		

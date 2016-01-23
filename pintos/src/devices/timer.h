@@ -22,7 +22,7 @@ void timer_usleep (int64_t microseconds);
 void timer_nsleep (int64_t nanoseconds);
 
 /*Comparator Function for Inserting Threads into Sleep List*/
-static bool MY_COMPARATOR_FUNCTION (const struct list_elem *a, const struct list_elem *b, void *aux); 
+bool MY_COMPARATOR_FUNCTION (const struct list_elem *a, const struct list_elem *b, void *aux); 
 void wake_up_threads(void);
 
 
