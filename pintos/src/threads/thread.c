@@ -28,6 +28,12 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+/* List of the processes that donates their priority.
+   Processes are added to this list when they donates their priority to 
+   lower-priority threads. */
+static struct list donor_list;
+
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -90,6 +96,7 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
+  list_init (&donor_list);
   list_init (&ready_list);
   list_init (&all_list);
 
