@@ -346,18 +346,52 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+//May need a way to donate priority 
+//Need to find out how to determine the need to donate and retrieve the donated priority
+/* Get the priority from the thread 
+int get_pri(struct thread *t)
+{
+	return t
+	//not sure about the difference between this function and  thread_get_priority()
+} */
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+	//set the current thread's priority to new_priority
+	thread_current ()->priority = new_priority;
+	
+	struct list_elem tmp_e* = list_max(&ready_list, *more, NULL);
+	struct thread tmp_t* = list_entry(tmp_e, struct thread, donor_elem);
+	
+	//if the current thread no longer has the highest priority
+	if(thread_current() != tmp_t)
+	{
+		thread_yield();
+	}
 }
 
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+	 //In the presence of priority donation, returns the higher (donated) priority.
+     //need to check the donor_list
+	//if the donor_list is not empty
+	if(!list_empty(&donor_list)
+	{
+		//get the highest priority in the donor_list
+		struct list_elem tmp_e* = list_max(&donor_list, *more, NULL);
+		struct thread tmp_t* = list_entry(&tmp_e, struct thread, donor_elem);
+		return tmp_t -> priority; //return the priority from the donor_list
+	}
+	
+	//else, return the current threads' priority
+	else
+	{
+		return thread_current() -> priority;
+	}
 }
 
 /* Sets the current thread's nice value to NICE. */
