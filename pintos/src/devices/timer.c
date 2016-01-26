@@ -45,7 +45,6 @@ timer_init (void)
   list_init (&sleep_list);
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
-  
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -125,9 +124,7 @@ void wake_up_threads(void)
 {
 	//check current time
 	int64_t curr_time = timer_ticks (); 
-	
-	
-	
+
 	//while loop
 	while(!list_empty(&sleep_list) )
 	{
@@ -221,9 +218,10 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
+  wake_up_threads();
   ticks++;
   thread_tick ();
-  wake_up_threads();
+  
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
