@@ -76,6 +76,7 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+static bool more (const struct list_elem *a,const struct list_elem *b, void *aux); 
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -362,8 +363,8 @@ thread_set_priority (int new_priority)
 	//set the current thread's priority to new_priority
 	thread_current ()->priority = new_priority;
 	
-	struct list_elem tmp_e* = list_max(&ready_list, *more, NULL);
-	struct thread tmp_t* = list_entry(tmp_e, struct thread, donor_elem);
+	struct list_elem *tmp_e = list_max(&ready_list, *more, NULL);
+	struct thread *tmp_t = list_entry(tmp_e, struct thread, donor_elem);
 	
 	//if the current thread no longer has the highest priority
 	if(thread_current() != tmp_t)
@@ -379,11 +380,11 @@ thread_get_priority (void)
 	 //In the presence of priority donation, returns the higher (donated) priority.
      //need to check the donor_list
 	//if the donor_list is not empty
-	if(!list_empty(&donor_list)
+	if(!list_empty(&donor_list))
 	{
 		//get the highest priority in the donor_list
-		struct list_elem tmp_e* = list_max(&donor_list, *more, NULL);
-		struct thread tmp_t* = list_entry(&tmp_e, struct thread, donor_elem);
+		struct list_elem *tmp_e = list_max(&donor_list, *more, NULL);
+		struct thread *tmp_t = list_entry(tmp_e, struct thread, donor_elem);
 		return tmp_t -> priority; //return the priority from the donor_list
 	}
 	
@@ -392,6 +393,17 @@ thread_get_priority (void)
 	{
 		return thread_current() -> priority;
 	}
+}
+
+static bool more (const struct list_elem *a,
+									const struct list_elem *b,
+									void *aux) 
+{
+	struct thread *threadA = list_entry (a,struct thread,donor_elem); 
+	struct thread *threadB = list_entry (b,struct thread,donor_elem);
+	if (threadA->priority > threadB->priority)
+		return true;
+	return false;
 }
 
 /* Sets the current thread's nice value to NICE. */
