@@ -190,6 +190,7 @@ thread_create (const char *name, int priority,
 
   /* Initialize thread. */
   init_thread (t, name, priority);
+  msg ("First set pri at %d", priority);
   tid = t->tid = allocate_tid ();
 
   /* Prepare thread for first run by initializing its stack.
@@ -202,6 +203,8 @@ thread_create (const char *name, int priority,
   kf->eip = NULL;
   kf->function = function;
   kf->aux = aux;
+  
+  //function did not execute anywhere?
 
   /* Stack frame for switch_entry(). */
   ef = alloc_frame (t, sizeof *ef);
@@ -353,25 +356,73 @@ thread_foreach (thread_action_func *func, void *aux)
 /* Get the priority from the thread 
 int get_pri(struct thread *t)
 {
-	return t
-	//not sure about the difference between this function and  thread_get_priority()
+	 //In the presence of priority donation, returns the higher (donated) priority.
+     //need to check the donor_list
+	//if the donor_list is not empty
+	if(!list_empty(&donor_list))
+	{
+		//get the highest priority in the donor_list
+		struct list_elem *tmp_e = list_max(&donor_list, *more, NULL);
+		struct thread *tmp_t = list_entry(tmp_e, struct thread, donor_elem);
+		
+		return tmp_t -> priority; //return the priority from the donor_list
+	}
+	
+	//else, return the current threads' priority
+	else
+	{
+		return t -> priority;
+	}
 } */
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
-	//set the current thread's priority to new_priority
-	thread_current ()->priority = new_priority;
+	int old_pri = thread_current() -> priority;
 	
-	struct list_elem *tmp_e = list_max(&ready_list, more, NULL);
+	//set the current thread's priority to new_priority
+	thread_current() -> priority = new_priority;
+	
+	//struct list_elem *tmp_e = list_max(&ready_list, more, NULL);
 	//struct thread *tmp_t = list_entry(tmp_e, struct thread, elem);
 	
-	//if the current thread no longer has the highest priority
-	if(thread_current()-> elem != tmp_e)
+	msg ("In thread_set_priority, old pri should be %d", old_pri);
+	msg ("In thread_set_priority, new pri should be %d", new_priority);
+	msg ("real pri is %d", thread_current() -> priority);
+	
+	/*int pri_f, pri_g;
+	//check ready list and find the biggest priority
+	if(!list_empty(&ready_list)
 	{
+		struct list_elem *max = list_begin(ready_list);
+		if(max != list_end(ready_list)
+		{
+			struct list_elem *tmp;
+			for(tmp = list_next(max); e != list_end(ready_list); e = list_next(e))
+			{
+				struct thread *f = list_entry(e, struct thread, elem);
+				struct thread *g = list_entry(max, struct thread, elem);
+				
+				pri_f = f -> priority;
+				pri_g = g -> priority;
+				
+				if(g < f) //compare priority
+				{
+					max = e;
+				}
+			}
+		}
+	}*/
+		
+	//if the current thread no longer has the highest priority
+	if (old_pri > thread_current()->priority)
+	{
+		//msg ("yielding");
 		thread_yield();
-	}
+	}	
+	/* Add to run queue. */
+	//thread_unblock (thread_current());
 }
 
 /* Returns the current thread's priority. */

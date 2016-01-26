@@ -115,8 +115,39 @@ bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 {
 	struct thread *threadA = list_entry (a,struct thread,sleep_elem); 
 	struct thread *threadB = list_entry (b,struct thread,sleep_elem);
+	
+	/*
+	int wt_a = threadA->wake_time;
+	int wt_b = threadB->wake_time;
+	msg ("A has wake time %d", wt_a);
+	msg ("B has wake time %d", wt_b);
+		*/
+	//if thread A has less wake time, return true so A goes in the front of the list
 	if (threadA->wake_time < threadB->wake_time)
+	{
+		int a = threadA->wake_time;
+		int b = threadB->wake_time;
+		msg ("A has wake time %d", a);
+		msg ("B has wake time %d", b);
 		return true;
+	}
+	
+	
+	int p_a = threadA->priority;
+	int p_b = threadB->priority;
+	msg ("A has wake time %d", p_a);
+	msg ("B has wake time %d", p_b);
+	
+	//if thread A and B has the same wake time
+	//check the priority, if A has higher priority, return true
+	//so A will be in the front of the list to be awake first
+	if(threadA->priority > threadB->priority)
+	{
+		msg ("true");
+		return true;
+	}
+
+	msg ("false");
 	return false;
 }
 
@@ -130,7 +161,11 @@ void wake_up_threads(void)
 	{
 		struct list_elem * e = list_begin(&sleep_list); //beginning of list elem
 		struct thread * t = list_entry(e, struct thread, sleep_elem); //thread of e
-		int64_t thread_wake_time = t -> wake_time; //the pointer that points to the thread's wake time	
+		int64_t thread_wake_time = t -> wake_time; //the pointer that points to the thread's wake time
+		//need to find the thread with highest priority first
+		//list_max (struct list *list, list_less_func *less, void *aux) 
+		//then check if the highest priority has less wake_time then curr time
+		//if it does, then wake it up	
 		if (thread_wake_time <= timer_ticks () +1) // hacky fix !!!//
 		{
 				thread_unblock(t); //wake up the thread
