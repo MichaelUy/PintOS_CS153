@@ -42,9 +42,9 @@ static struct list sleep_list;
 void
 timer_init (void) 
 {
-  list_init (&sleep_list);
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+  list_init (&sleep_list);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -129,12 +129,9 @@ void wake_up_threads(void)
 	while(!list_empty(&sleep_list) )
 	{
 		struct list_elem * e = list_begin(&sleep_list); //beginning of list elem
-		
 		struct thread * t = list_entry(e, struct thread, sleep_elem); //thread of e
-		//ASSERT (is_thread (t));
-		int64_t thread_wake_time = t -> wake_time; //the pointer that points to the thread's wake time
-	
-		if (thread_wake_time <= curr_time)
+		int64_t thread_wake_time = t -> wake_time; //the pointer that points to the thread's wake time	
+		if (thread_wake_time <= timer_ticks () +1) // hacky fix !!!//
 		{
 				thread_unblock(t); //wake up the thread
 				list_pop_front(&sleep_list); //pop the threads from the sleep list

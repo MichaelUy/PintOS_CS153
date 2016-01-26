@@ -213,10 +213,11 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   intr_set_level (old_level);
-
+  if (priority > thread_current()->priority)
+	thread_yield();
   /* Add to run queue. */
   thread_unblock (t);
-
+  
   return tid;
 }
 
@@ -363,11 +364,11 @@ thread_set_priority (int new_priority)
 	//set the current thread's priority to new_priority
 	thread_current ()->priority = new_priority;
 	
-	struct list_elem *tmp_e = list_max(&ready_list, *more, NULL);
-	struct thread *tmp_t = list_entry(tmp_e, struct thread, donor_elem);
+	struct list_elem *tmp_e = list_max(&ready_list, more, NULL);
+	//struct thread *tmp_t = list_entry(tmp_e, struct thread, elem);
 	
 	//if the current thread no longer has the highest priority
-	if(thread_current() != tmp_t)
+	if(thread_current()-> elem != tmp_e)
 	{
 		thread_yield();
 	}
@@ -548,8 +549,13 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  else{
+    // look through ready_list looking for max priority
+    struct list_elem *tmp_e = list_max(&ready_list, more, NULL);
+    list_remove(tmp_e);
+	return list_entry(tmp_e, struct thread, elem);
+	//return list_entry (list_max(&ready_list,more,NULL), struct thread, elem);
+	}
 }
 
 /* Completes a thread switch by activating the new thread's page
