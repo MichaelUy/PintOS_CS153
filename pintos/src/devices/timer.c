@@ -117,37 +117,32 @@ bool MY_COMPARATOR_FUNCTION (const struct list_elem *a,
 	struct thread *threadB = list_entry (b,struct thread,sleep_elem);
 	
 	/*
-	int wt_a = threadA->wake_time;
-	int wt_b = threadB->wake_time;
-	msg ("A has wake time %d", wt_a);
-	msg ("B has wake time %d", wt_b);
+	int wt_a = threadA->wake_time; 	int wt_b = threadB->wake_time;
+	msg ("A has wake time %d", wt_a); 	msg ("B has wake time %d", wt_b);
 		*/
 	//if thread A has less wake time, return true so A goes in the front of the list
 	if (threadA->wake_time < threadB->wake_time)
 	{
-		int a = threadA->wake_time;
-		int b = threadB->wake_time;
-		msg ("A has wake time %d", a);
-		msg ("B has wake time %d", b);
+		//int a = threadA->wake_time; int b = threadB->wake_time;
+		//msg ("A has wake time %d", a); msg ("B has wake time %d", b);
 		return true;
 	}
 	
-	
-	int p_a = threadA->priority;
-	int p_b = threadB->priority;
-	msg ("A has wake time %d", p_a);
-	msg ("B has wake time %d", p_b);
+	/*
+	int p_a = threadA->priority; 	int p_b = threadB->priority;
+	msg ("A has wake time %d", p_a); 	msg ("B has wake time %d", p_b);
+	*/
 	
 	//if thread A and B has the same wake time
 	//check the priority, if A has higher priority, return true
 	//so A will be in the front of the list to be awake first
 	if(threadA->priority > threadB->priority)
 	{
-		msg ("true");
+		//msg ("true");
 		return true;
 	}
 
-	msg ("false");
+	//msg ("false");
 	return false;
 }
 
