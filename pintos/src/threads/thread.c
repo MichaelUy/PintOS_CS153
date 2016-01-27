@@ -378,9 +378,7 @@ int get_pri(struct thread *t)
 	}
 } */
 
-bool find_max_pri (const struct list_elem *a,
-									const struct list_elem *b,
-									void *aux) 
+bool find_max_pri (const struct list_elem *a, const struct list_elem *b, void *aux) 
 {
 	struct thread *threadA = list_entry (a, struct thread, elem); 
 	struct thread *threadB = list_entry (b, struct thread, elem);
@@ -408,8 +406,6 @@ bool find_max_pri (const struct list_elem *a,
 void
 thread_set_priority (int new_priority) 
 {
-	//int old_pri = thread_current() -> priority;
-	
 	//set the current thread's priority to new_priority
 	thread_current() -> priority = new_priority;
 	
@@ -419,20 +415,17 @@ thread_set_priority (int new_priority)
 	//check ready list and find the biggest priority
 	if(!list_empty(&ready_list))
 	{	
-		msg ("not empty");
 		tmp_e = list_max(&ready_list, find_max_pri, NULL);
-
+		tmp_t = list_entry(tmp_e, struct thread, elem);
+		//msg ("tmp_t pri is %d", tmp_t->priority);
+	}
 	
-	tmp_t = list_entry(tmp_e, struct thread, elem);
-	
-	msg ("tmp_t pri is %d", tmp_t->priority);
-}
-	msg ("curr pri is %d", thread_current()->priority);
+	//msg ("curr pri is %d", thread_current()->priority);
 
 	//if the current thread no longer has the highest priority
 	if (tmp_t->priority > thread_current()->priority)
 	{
-		msg ("yielding");
+		//msg ("yielding");
 		thread_yield();
 	}	
 }
@@ -463,11 +456,9 @@ static bool more (const struct list_elem *a,
 									const struct list_elem *b,
 									void *aux) 
 {
-	struct thread *threadA = list_entry (a,struct thread,donor_elem); 
-	struct thread *threadB = list_entry (b,struct thread,donor_elem);
-	if (threadA->priority < threadB->priority)
-		return true;
-	return false;
+	struct thread *threadA = list_entry (a,struct thread, elem); 
+	struct thread *threadB = list_entry (b,struct thread, elem);
+	return threadA->priority < threadB->priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
