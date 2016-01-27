@@ -386,19 +386,17 @@ bool find_max_pri (const struct list_elem *a, const struct list_elem *b, void *a
 	
 	int p_a = threadA->priority;
 	int p_b = threadB->priority;
-	msg ("A has pri %d", p_a);
-	msg ("B has pri %d", p_b);
-	
+	//msg ("A has pri %d", p_a); 	msg ("B has pri %d", p_b);
 	
 	//check the priority, if A has higher priority, return true
 	//so A will be in the front of the list to be awake first
 	if(threadA->priority > threadB->priority)
 	{
-		msg ("true");
+		//msg ("true");
 		return true;
 	}
 
-	msg ("false");
+	//msg ("false");
 	return false;
 }
 
