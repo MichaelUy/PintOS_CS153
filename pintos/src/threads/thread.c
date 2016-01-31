@@ -28,11 +28,8 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
-/* List of the processes that donates their priority.
-   Processes are added to this list when they donates their priority to 
-   lower-priority threads. */
-static struct list donor_list;
-
+/* List of the locks that a thread is holding */
+static struct list lock_list;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -97,7 +94,6 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
-  list_init (&donor_list);
   list_init (&ready_list);
   list_init (&all_list);
 
@@ -356,47 +352,43 @@ thread_foreach (thread_action_func *func, void *aux)
 
 //May need a way to donate priority 
 //Need to find out how to determine the need to donate and retrieve the donated priority
-/* Get the priority from the thread 
+// Get the priority from the thread 
 int get_pri(struct thread *t)
 {
-	 //In the presence of priority donation, returns the higher (donated) priority.
-     //need to check the donor_list
-	//if the donor_list is not empty
-	if(!list_empty(&donor_list))
-	{
-		//get the highest priority in the donor_list
-		struct list_elem *tmp_e = list_max(&donor_list, *more, NULL);
-		struct thread *tmp_t = list_entry(tmp_e, struct thread, donor_elem);
-		
-		return tmp_t -> priority; //return the priority from the donor_list
-	}
-	
-	//else, return the current threads' priority
-	else
-	{
-		return t -> priority;
-	}
-} */
+	 int max = t->priority;
+	 enum intr_level old_level;
+	 struct list *locks = &t->lock_list;
+	 struct list_elem *e;
+	 old_level = intr_disable();
+	 
+	 
+	 if(!list_empty(locks))
+	 {
+		for (e = list_begin(locks);e!=list_end(locks);e=list_next(e))
+		{
+			//for each lock, check its sema's waiter
+			struct list *donors = &list_entry(e,struct lock,lock_elem)->semaphore.waiters;
+			struct list_elem *max_donor = list_max(donors, find_max_pri, NULL); 
+			int m = get_pri(list_entry(max_donor,struct thread, elem));
+			if (m>max)
+				max=m;
+		}
+	 }
+	 intr_set_level (old_level);
+	 return max;
+} 
 
 bool find_max_pri (const struct list_elem *a, const struct list_elem *b, void *aux) 
 {
 	struct thread *threadA = list_entry (a, struct thread, elem); 
 	struct thread *threadB = list_entry (b, struct thread, elem);
 	
-	
-	int p_a = threadA->priority;
-	int p_b = threadB->priority;
-	//msg ("A has pri %d", p_a); 	msg ("B has pri %d", p_b);
-	
 	//check the priority, if A has higher priority, return true
 	//so A will be in the front of the list to be awake first
 	if(threadA->priority > threadB->priority)
 	{
-		//msg ("true");
 		return true;
 	}
-
-	//msg ("false");
 	return false;
 }
 
@@ -432,22 +424,7 @@ thread_set_priority (int new_priority)
 int
 thread_get_priority (void) 
 {
-	 //In the presence of priority donation, returns the higher (donated) priority.
-     //need to check the donor_list
-	//if the donor_list is not empty
-	/*if(!list_empty(&donor_list))
-	{
-		//get the highest priority in the donor_list
-		struct list_elem *tmp_e = list_max(&donor_list, MY_COMPARATOR_FUNCTION, NULL);
-		struct thread *tmp_t = list_entry(tmp_e, struct thread, donor_elem);
-		return tmp_t -> priority; //return the priority from the donor_list
-	}
-	
-	//else, return the current threads' priority
-	else
-	{*/
-		return thread_current() -> priority;
-	//}
+	 get_pri(thread_current());
 }
 
 static bool more (const struct list_elem *a,
@@ -458,6 +435,7 @@ static bool more (const struct list_elem *a,
 	struct thread *threadB = list_entry (b,struct thread, elem);
 	return threadA->priority < threadB->priority;
 }
+
 
 /* Sets the current thread's nice value to NICE. */
 void
@@ -576,6 +554,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+  list_init(&t->lock_list);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

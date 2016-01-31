@@ -92,7 +92,7 @@ struct thread
 	int64_t wake_time;					/* Time to wake in ticks*/
 	struct list_elem sleep_elem;        /* List element for threads that are sleeping. */
 	struct list_elem donor_elem;	    /* List element for threads that donates. */
-	
+	struct list lock_list;				/* List of the locks that this thread holds */
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 	
@@ -137,7 +137,7 @@ bool find_max_pri (const struct list_elem *a, const struct list_elem *b,
 									void *aux); 
 int thread_get_priority (void);
 void thread_set_priority (int);
-//int get_pri(struct thread *t);
+int get_pri(struct thread *t);
 static bool more (const struct list_elem *a,const struct list_elem *b, void *aux); 
 int thread_get_nice (void);
 void thread_set_nice (int);
