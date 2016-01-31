@@ -358,22 +358,27 @@ int get_pri(struct thread *t)
 	 int max = t->priority;
 	 enum intr_level old_level;
 	 struct list *locks = &t->lock_list;
-	 struct list_elem *e;
+	 struct list_elem *e = list_begin(locks);
 	 old_level = intr_disable();
 	 
 	 
-	 if(!list_empty(locks))
+	 if(e != list_end(locks))
 	 {
-		for (e = list_begin(locks);e!=list_end(locks);e=list_next(e))
+		for (;e!=list_end(locks);e=e->next)
 		{
 			//for each lock, check its sema's waiter
 			struct list *donors = &list_entry(e,struct lock,lock_elem)->semaphore.waiters;
-			struct list_elem *max_donor = list_max(donors, find_max_pri, NULL); 
-			int m = get_pri(list_entry(max_donor,struct thread, elem));
-			if (m>max)
-				max=m;
+			if(!list_empty(donors))
+			{
+				ASSERT(list_size(donors) != 0);
+				struct list_elem *max_donor = list_max(donors, find_less_pri, NULL); 
+				int m = get_pri(list_entry(max_donor,struct thread, elem));
+				if (m>max)
+					max=m;
+			}
 		}
 	 }
+	 
 	 intr_set_level (old_level);
 	 return max;
 } 
@@ -392,6 +397,20 @@ bool find_max_pri (const struct list_elem *a, const struct list_elem *b, void *a
 	return false;
 }
 
+
+bool find_less_pri (const struct list_elem *a, const struct list_elem *b, void *aux) 
+{
+	struct thread *threadA = list_entry (a, struct thread, elem); 
+	struct thread *threadB = list_entry (b, struct thread, elem);
+	
+	//check the priority, if A has higher priority, return true
+	//so A will be in the front of the list to be awake first
+	if(threadA->priority < threadB->priority)
+	{
+		return true;
+	}
+	return false;
+}
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 

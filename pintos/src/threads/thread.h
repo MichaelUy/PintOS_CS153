@@ -135,6 +135,8 @@ void thread_foreach (thread_action_func *, void *);
 
 bool find_max_pri (const struct list_elem *a, const struct list_elem *b,
 									void *aux); 
+bool find_less_pri (const struct list_elem *a, const struct list_elem *b,
+									void *aux); 
 int thread_get_priority (void);
 void thread_set_priority (int);
 int get_pri(struct thread *t);

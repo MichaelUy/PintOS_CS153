@@ -109,15 +109,27 @@ void
 sema_up (struct semaphore *sema) 
 {
   enum intr_level old_level;
+  struct thread *  tmp_t = thread_current();
 
   ASSERT (sema != NULL);
-
   old_level = intr_disable ();
+  //unblock the higherst pri on the waiter list
   if (!list_empty (&sema->waiters)) 
-    thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                struct thread, elem));
+  {
+	  printf("\nsema->waiters list size: %d\n", list_size(&sema->waiters));
+	  struct list_elem *tmp_e = list_max((&sema->waiters), find_less_pri, NULL);
+	  tmp_t = list_entry(tmp_e, struct thread, elem);
+	  thread_unblock(tmp_t);
+  }
+                                
   sema->value++;
   intr_set_level (old_level);
+  
+  //if the curr thread doesnt have the highest anymore, yield
+  if (thread_get_priority() < get_pri(tmp_t)) 
+  { 
+		thread_yield();
+  }
 }
 
 static void sema_test_helper (void *sema_);
@@ -199,6 +211,12 @@ lock_acquire (struct lock *lock)
   old_level = intr_disable();
   sema_down (&lock->semaphore);
   list_push_back(&thread_current()->lock_list, &lock->lock_elem);
+  /*
+  if (list_empty(&thread_current()->lock_list))
+	printf("Lock Acquire: empty ");
+  else
+	printf("Lock Acquire: not empty ");
+  */
   lock->holder = thread_current ();
   intr_set_level(old_level);
 }
@@ -231,10 +249,21 @@ lock_try_acquire (struct lock *lock)
 void
 lock_release (struct lock *lock) 
 {
+  enum intr_level old_level;
+  old_level = intr_disable();
+  
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-
+  
   lock->holder = NULL;
+  git (&lock->lock_elem);
+  /*
+  if(list_empty(&thread_current()->lock_list))
+	printf("Lock Release: empty ");
+  else 
+	printf("Lock Release: not empty ");
+  */
+  intr_set_level (old_level);  
   sema_up (&lock->semaphore);
 }
 
