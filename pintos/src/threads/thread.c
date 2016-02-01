@@ -406,7 +406,7 @@ bool find_less_pri (const struct list_elem *a, const struct list_elem *b, void *
 	
 	//check the priority, if A has higher priority, return true
 	//so A will be in the front of the list to be awake first
-	if(threadA->priority < threadB->priority)
+	if(get_pri(threadA) < get_pri(threadB))
 	{
 		return true;
 	}
