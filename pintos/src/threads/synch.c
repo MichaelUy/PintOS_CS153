@@ -116,8 +116,9 @@ sema_up (struct semaphore *sema)
   //unblock the higherst pri on the waiter list
   if (!list_empty (&sema->waiters)) 
   {
-	  printf("\nsema->waiters list size: %d\n", list_size(&sema->waiters));
+	  //printf("\nsema->waiters list size: %d\n", list_size(&sema->waiters));
 	  struct list_elem *tmp_e = list_max((&sema->waiters), find_less_pri, NULL);
+	  list_remove(tmp_e);
 	  tmp_t = list_entry(tmp_e, struct thread, elem);
 	  thread_unblock(tmp_t);
   }
@@ -126,9 +127,11 @@ sema_up (struct semaphore *sema)
   intr_set_level (old_level);
   
   //if the curr thread doesnt have the highest anymore, yield
-  if (thread_get_priority() < get_pri(tmp_t)) 
-  { 
-		thread_yield();
+  if(thread_current() != tmp_t){
+	  if (thread_get_priority() < get_pri(tmp_t)) 
+	  { 
+			thread_yield();
+	  }
   }
 }
 
@@ -254,9 +257,9 @@ lock_release (struct lock *lock)
   
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  
+  list_remove(&lock->lock_elem);
   lock->holder = NULL;
-  git (&lock->lock_elem);
+  
   /*
   if(list_empty(&thread_current()->lock_list))
 	printf("Lock Release: empty ");
