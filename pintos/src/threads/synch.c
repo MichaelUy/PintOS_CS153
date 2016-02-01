@@ -350,10 +350,59 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (lock_held_by_current_thread (lock));
-
+  
+  struct list_elem *sema;
+  //struct list *w;
+  struct semaphore *tmp_s;
+  struct semaphore_elem *tmp_se;
+  struct semaphore *max;
+  struct list_elem *tmp_e;
+  struct list_elem *max_e;
+  int max_pri = 0;
+  
+  //if cond's waiter is not empty
   if (!list_empty (&cond->waiters)) 
+  {
+	  //traverse through the cond's waiter
+	 for(sema = list_begin(&cond->waiters);
+		sema != list_end(&cond->waiters);
+		sema = list_next(sema))
+		{	  
+		   //for each sema
+		   tmp_se =list_entry (sema,struct semaphore_elem, elem);
+		   tmp_s = &tmp_se ->semaphore;
+		   //if the sema's waiter list is not empty
+		   if(!list_empty(&tmp_s->waiters))
+		   {
+			   
+			  //find the max pri of that sema
+			  //if the max is higher than curr max, replace 
+			  struct list_elem *tmp_e = list_max((&tmp_s->waiters), find_less_pri, NULL);
+			  struct thread *tmp_t = list_entry(tmp_e, struct thread, elem);
+			  int curr_pri = get_pri(tmp_t);
+			  //printf ("curr_pri = %d\n",curr_pri);
+			  if(curr_pri > max_pri){
+				//printf("new max\n");
+				max_pri = curr_pri;
+				max = tmp_s;
+				max_e = tmp_se;
+				//printf("\nNEW MAX-- Waitlist size: %d",list_size(&max->waiters));
+			  
+			  }
+		  } 
+		}
+	
+	ASSERT(max !=NULL); 
+	list_remove(max_e);
+	sema_up(max);
+    
+	}
+	/*    
+  if (!list_empty (&cond->waiters)){ 
     sema_up (&list_entry (list_pop_front (&cond->waiters),
                           struct semaphore_elem, elem)->semaphore);
+	}
+	*/
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by
