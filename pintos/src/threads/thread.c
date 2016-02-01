@@ -210,15 +210,16 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   intr_set_level (old_level);
-  if (priority > thread_current()->priority)
-	thread_yield();
+  
   /* Add to run queue. */
   thread_unblock (t);
   
   //check priority
   //if the current thread is not the highest anymore, yield
-  if(thread_current()->priority < priority)
-	thread_yield();
+  if (priority > thread_get_priority())
+  {
+      thread_yield();
+	}
   
   return tid;
 }
@@ -432,9 +433,8 @@ thread_set_priority (int new_priority)
 	//msg ("curr pri is %d", thread_current()->priority);
 
 	//if the current thread no longer has the highest priority
-	if (tmp_t->priority > thread_current()->priority)
+	if (tmp_t->priority > thread_get_priority())
 	{
-		//msg ("yielding");
 		thread_yield();
 	}	
 }
@@ -452,7 +452,7 @@ static bool more (const struct list_elem *a,
 {
 	struct thread *threadA = list_entry (a,struct thread, elem); 
 	struct thread *threadB = list_entry (b,struct thread, elem);
-	return threadA->priority < threadB->priority;
+	return get_pri(threadA) < get_pri(threadB);
 }
 
 
